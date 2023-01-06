@@ -37,6 +37,5 @@ class vueAjoutLivre extends Vue {
                 echo '</div>';
 
                 include "footer.html";
-        }	
-	
+        }
 }

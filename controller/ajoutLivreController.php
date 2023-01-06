@@ -9,7 +9,6 @@ class ajoutLivreController
         require_once "controller/Controller.php";
         require_once "vue/vueAjoutLivre.php";
 
-
         if (Controller::auth()) {
             $v = new vueAjoutLivre();
             $v->affiche();

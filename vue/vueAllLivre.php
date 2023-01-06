@@ -21,11 +21,12 @@ class vueAllLivre extends Vue {
         while ($i < $total)
         {
             $l = $ldb->convertPdoLiv($livre[$i]);
-            $htmlLivre .= "<li><p><b>" . $l->getId() . "</b></p>";
-            $htmlLivre .= "<p>" . $l->getTitre() . "</p>";
-            $htmlLivre .= "<p>" . $l->getEdition() . "</p>";
-            $htmlLivre .= "<p>" . $l->getInformation() . "</p>";
-            $htmlLivre .= "<p>" . $l->getAuteur() . "</p></li>";
+            $urlModif = "index.php?action=modifLivre&livreId=" . $l->getId() . "&id=" . $_SESSION['token'];
+            $htmlLivre .= "<tr><th>Id: <b>" . $l->getId() . "</b></th>";
+            $htmlLivre .= "<th>Titre: <a href='" . $urlModif . "&colName=titre" ."'>" . $l->getTitre() . "</a></th>"; //
+            $htmlLivre .= "<th>Edition: <a href='" . $urlModif . "&colName=edition" ."'>" . $l->getEdition() . "</a></th>";
+            $htmlLivre .= "<th>Info: <a href='" . $urlModif . "&colName=information" ."'>" . $l->getInformation() . "</a></th>";
+            $htmlLivre .= "<th>Auteur: <a href='" . $urlModif . "&colName=auteur" ."'>" . $l->getAuteur() . "</a></th></tr>";
             $i++;
         }
         return ($htmlLivre);
@@ -38,9 +39,11 @@ class vueAllLivre extends Vue {
         echo '<div class="covered-img">';
         echo ' <div class="container">';
         echo '<h1 class="lead">Liste des livres</h1>';
-        echo '<ul class=\'font-italic\'>';
+        echo '<style>table { margin: 10px; margin-bottom: 100px; } tr { display: inline-block; margin: 15px; background-color: grey; padding: 10px; } th { display: block; } th > a { color: green; }</style>';
+        echo '<table class=\'font-italic\'><tbody>';
         echo $this->liste();
-        echo '</ul>';
+        echo '</tbody>';
+        echo '</table>';
         echo '</div>';
         echo '</div>';
 

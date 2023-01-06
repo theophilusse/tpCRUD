@@ -9,7 +9,6 @@ class allLivreController
         require_once "controller/Controller.php";
         require_once "vue/vueAllLivre.php";
 
-
         if (Controller::auth()) {
             $v = new vueAllLivre();
             $v->affiche();
