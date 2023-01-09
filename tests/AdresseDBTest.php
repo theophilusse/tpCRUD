@@ -14,6 +14,7 @@ class AdresseDBTest extends TestCase
      */
     protected $adresse;
     protected $pdodb;
+    protected $last_id;
 
     /**
      * Sets up the fixture, for example, opens a network connection.
@@ -26,6 +27,16 @@ class AdresseDBTest extends TestCase
         $arrExtraParam = array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
         $this->pdodb = new PDO($strConnection, Constantes::USER, Constantes::PASSWORD, $arrExtraParam); //Ligne 3; Instancie la connexion
         $this->pdodb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        //parametre de connexion à la bae de donnée
+        $strConnection = Constantes::TYPE . ':host=' . Constantes::HOST . ';dbname=' . Constantes::BASE;
+        $arrExtraParam = array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
+	    $this->pdodb = new PDO($strConnection,
+		Constantes::USER,
+		Constantes::PASSWORD,
+		$arrExtraParam);       //Ligne 3; Instancie la connexion
+        $this->pdodb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->adresse = new AdresseDB($this->pdodb);
     }
 
     /**
@@ -42,14 +53,12 @@ class AdresseDBTest extends TestCase
      */
     public function testAjout()
     {
-        $debug = 1;
-        $this->adresse = new AdresseDB($this->pdodb);
-        $debug .= "A";
         $a = new Adresse(99, 32, "rue Jean moulin", 44000, "Nantes");
-        $debug .= "B";
-        $this->adresse->ajout($a, 4); // ????
-        $debug .= "C";
-        $adr = $this->adresse->selectAdresse($a->getId());
+        //insertion en bdd
+        $robid = 6517; // rob
+        $this->adresse->ajout($a, $robid);
+        $id = $this->adresse->lastInsertId();
+        $adr = $this->adresse->selectAdresse($id);
         $this->assertEquals($a->getNumero(), $adr->getNumero());
         $this->assertEquals($a->getRue(), $adr->getRue());
         $this->assertEquals($a->getCodePostal(), $adr->getCodePostal());
@@ -63,29 +72,21 @@ class AdresseDBTest extends TestCase
      */
     public function testSuppression()
     {
+        $a = new Adresse(99, 32, "rue Jean moulin", 44000, "Nantes");
+        //insertion en bdd
+        $robid = 6517; // rob
+        $this->adresse->ajout($a, $robid);
+        $id = $this->adresse->lastInsertId();
+        $adr = $this->adresse->selectAdresse($id);
+        $this->adresse->suppression($adr);
+        $res = false;
         try {
-
-            $this->adresse = new AdresseDB($this->pdodb);
-            $a = new Adresse(100, 42, "rue du Moulin", 75000, "Paris");
-
-            $this->adresse->ajout($a, "5");
-
-
-            $adr = $this->adresse->selectAdresse($a->getId());
-            $nb = $this->adresse->suppression($adr);
-            $adr = $this->adresse->selectAdresse($a->getId());
-
-
-            if ($adr != null) {
-                $this->markTestIncomplete(
-                    'This test delete not ok.'
-                );
-            }
-        } catch (Exception $e) {
-            //verification exception
-            $exception = "RECORD ADRESSE not present in DATABASE";
-            $this->assertEquals($exception, $e->getMessage()); // ????
+            $adr = $this->adresse->selectAdresse($id);
+        } catch (Exception $e)
+        {
+            $res = true;
         }
+        $this->assertTrue($res);
     }
 
     /**
@@ -94,15 +95,17 @@ class AdresseDBTest extends TestCase
      */
     public function testUpdate()
     {
-        $this->adresse = new AdresseDB($this->pdodb);
-        $a = new Adresse(4444, 26, "boulevard victor Hugo", 44000, "Nantes");
-        $this->adresse->ajout($a, 4444); // ????
-        $a->setNumero(4444);
+        $numero = 4444;
+        $a = new Adresse(99, 32, "rue Jean moulin", 44000, "Nantes");
+        $robid = 6517; // rob
+        $this->adresse->ajout($a, $robid);
+        $a->setNumero($numero);
+        $id = $this->adresse->lastInsertId();
+        $a->setId($id);
         $this->adresse->update($a);
-        //TODO  à finaliser 
-        $b = $this->adresse->selectAdresse(4444);
-        $this->assertEquals($a->getNumero(), $b->numero);
-        $this->adresse->supression(4444);
+        $adr = $this->adresse->selectAdresse($id);
+        $this->adresse->suppression($adr);
+        $this->assertEquals($adr->getNumero(), $numero);
     }
 
     /**
@@ -111,23 +114,22 @@ class AdresseDBTest extends TestCase
      */
     public function testSelectAll()
     {
-        $this->adresse = new AdresseDB($this->pdodb);
-        $res = $this->adresse->selectAll(); // ????
+        $a = new Adresse(99, 32, "rue Jean moulin", 44000, "Nantes");
+        $robid = 6517; // rob
+        $this->adresse->ajout($a, $robid);
+        $id = $this->adresse->lastInsertId();
+        $a->setId($id);
+        //
+        $res = $this->adresse->selectAll();
         $i = 0;
-        $ok = true;
+        $ok = false;
         foreach ($res as $key => $value) {
             $i++;
         }
-
-
-        if ($i == 0) {
-            $this->markTestIncomplete(
-                'Pas de résultats'
-            );
-            $ok = false;
-        }
+        if ($i != 0)
+            $ok = true;
+        $this->adresse->suppression($a);
         $this->assertTrue($ok);
-        print_r($res);
     }
 
     /**
@@ -136,9 +138,13 @@ class AdresseDBTest extends TestCase
      */
     public function testSelectIdAdresse()
     {
-        $this->adresse = new AdresseDB($this->pdodb);
-        $a = $this->adresse->selectAdresse(1); // ????
-        $adr = $this->adresse->selectAdresse($a->getId());
+        $a = new Adresse(99, 32, "rue Jean moulin", 44000, "Nantes");
+        $robid = 6517; // rob
+        $this->adresse->ajout($a, $robid);
+        $id = $this->adresse->lastInsertId();
+        $a->setId($id);
+        $adr = $this->adresse->selectAdresse($id);
+        $this->adresse->suppression($a);
         $this->assertEquals($a->getNumero(), $adr->getNumero());
         $this->assertEquals($a->getRue(), $adr->getRue());
         $this->assertEquals($a->getCodePostal(), $adr->getCodePostal());

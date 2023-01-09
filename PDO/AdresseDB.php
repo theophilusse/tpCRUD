@@ -37,6 +37,7 @@ class AdresseDB
               $this->last_id=$this->db->lastInsertId();
 		$q->closeCursor();
 		$q = NULL;
+		return ($a->getId());
 	}
     /**
      * 
@@ -59,21 +60,17 @@ class AdresseDB
 	 */
 public function update(Adresse $a)
 	{
-		try {
 		$q = $this->db->prepare('UPDATE adresse set numero=:n,rue=:r,codepostal=:c,ville=:v where id=:i');
 		$q->bindValue(':i', $a->getId());	
 		$q->bindValue(':n', $a->getNumero());	
 		$q->bindValue(':r', $a->getRue());	
 		$q->bindValue(':c', $a->getCodePostal());	
 		$q->bindValue(':v', $a->getVille());	
-		$q->execute();	
+		$q->execute();
+		$this->last_id=$this->db->lastInsertId();
 		$q->closeCursor();
 		$q = NULL;
-		}
-		catch(Exception $e){
-			throw new Exception(Constantes::EXCEPTION_DB_PERS_UP); 
-			
-		}
+		return ($this->last_id);
 	}
 	/**
 	 * 
@@ -186,6 +183,11 @@ public function update(Adresse $a)
 		throw new Exception(Constantes::EXCEPTION_DB_ADR_UP); 
 		
 	}
-	}	
+	}
+
+	public function lastInsertId()
+	{
+		return ($this->last_id);//$this->db->lastInsertId());
+	}
         
 }

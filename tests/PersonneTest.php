@@ -1,6 +1,8 @@
 <?php 
 use PHPUnit\Framework\TestCase;
-require_once 'metier/Personne.php';
+require_once "Constantes.php";
+require_once "metier/Personne.php";
+require_once "PDO/PersonneDB.php";
 
 /**
  * Personne test case.
@@ -22,11 +24,12 @@ class PersonneTest extends TestCase
     {
         parent::setUp();
 
-        // TODO Auto-generated PersonneTest::setUp()
-        $date='15/12/1950';
-        $dt = DateTime::createFromFormat('d/m/Y', $date);
-        $this->personne = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
-        $this->personne->setId(49);
+        $dateF='15/12/1950';
+        $dateFR = DateTime::createFromFormat('d/m/Y', $dateF);
+        $p = new Personne("Hollande", "Francois",$dateFR,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
+        $p->setPwd("monpwd");
+        $p->setId(49);
+        $this->personne = $p;
     }
 
     /**
@@ -50,8 +53,7 @@ class PersonneTest extends TestCase
      */
     public function testGetId()
     {
-        
-
+    
        $this->assertEquals(49, $this->personne->getId());
       
     }

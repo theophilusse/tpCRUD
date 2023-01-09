@@ -46,9 +46,9 @@ class LivreDB extends MediathequeDB
 		$q->bindValue(':edition', $l->getEdition());
 		$q->bindValue(':information', $l->getInformation());
 		$q->bindValue(':auteur', $l->getAuteur());
-		$l->setId();
 		$q->bindValue(':id', $l->getId());
 		$q->execute();
+		$this->last_id=$this->db->lastInsertId();
 		$q->closeCursor();
 	}
 	/**
@@ -155,5 +155,10 @@ class LivreDB extends MediathequeDB
 		$liv = new Livre($t,$c,$e,$a);
 		$liv->setId($i);
 		return $liv;
+	}
+
+	public function lastInsertId()
+	{
+		return ($this->last_id);//$this->db->lastInsertId());
 	}
 }

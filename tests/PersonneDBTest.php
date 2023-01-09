@@ -29,10 +29,14 @@ class PersonneDBTest extends TestCase {
 
     protected function setUp():void {
         //parametre de connexion à la bae de donnée
-     $strConnection = Constantes::TYPE.':host='.Constantes::HOST.';dbname='.Constantes::BASE; 
-    $arrExtraParam= array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
-    $this->pdodb = new PDO($strConnection, Constantes::USER, Constantes::PASSWORD, $arrExtraParam); //Ligne 3; Instancie la connexion
-    $this->pdodb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $strConnection = Constantes::TYPE . ':host=' . Constantes::HOST . ';dbname=' . Constantes::BASE;
+        $arrExtraParam = array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
+	    $this->pdodb = new PDO($strConnection,
+		Constantes::USER,
+		Constantes::PASSWORD,
+		$arrExtraParam);       //Ligne 3; Instancie la connexion
+        $this->pdodb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->personne = new PersonneDB($this->pdodb);
    
     }
 
@@ -51,31 +55,21 @@ class PersonneDBTest extends TestCase {
 * @backupStaticAttributes disabled
 */     
     public function testAjout() {
-       try{ 
-   $this->personne = new PersonneDB($this->pdodb);
-   
-   $dt = new DateTime('1950-01-12');
-   $p = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
-   $p->setPwd("monpwd");
-//insertion en bdd
-$this->personne->ajout($p);
-
-$pers=$this->personne->selectionNom($p->getNom()); // bullshit
-//echo "pers bdd: $pers";
-$this->assertEquals($p->getNom(),$pers->getNom());
-$this->assertEquals($p->getPrenom(),$pers->getPrenom());
-$this->assertEquals($p->getTelephone(),$pers->getTelephone());
-$this->assertEquals($p->getEmail(),$pers->getEmail());
-$this->assertEquals($p->getLogin(),$pers->getLogin());
-$this->assertEquals($p->getPwd(),$pers->getPwd());
-$this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
-
-
-    }
-    catch  (Exception $e) {
-    echo 'Exception recue : ',  $e->getMessage(), "\n";
-}
-
+        $dt = new DateTime('1950-01-12');
+        $p = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
+        $p->setPwd("monpwd");
+        //insertion en bdd
+        $this->personne->ajout($p);
+        $id = $this->personne->lastInsertId();
+        $pers = $this->personne->selectionId($id);
+        $this->personne->suppression($pers);
+        $this->assertEquals($p->getNom(),$pers->getNom());
+        $this->assertEquals($p->getPrenom(),$pers->getPrenom());
+        $this->assertEquals($p->getTelephone(),$pers->getTelephone());
+        $this->assertEquals($p->getEmail(),$pers->getEmail());
+        $this->assertEquals($p->getLogin(),$pers->getLogin());
+        $this->assertEquals($p->getPwd(),$pers->getPwd());
+        $this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
     }  
 
   /**
@@ -84,24 +78,23 @@ $this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissa
 * @backupStaticAttributes disabled
 */ 
     public function testSuppression() {
-        try{
-  $this->personne = new PersonneDB($this->pdodb);
-
-  $pers=$this->personne->selectionNom("Hollande"); // bullshit
-$this->personne->suppression($pers);
-  $pers2=$this->personne->selectionNom("Hollande");
-if($pers2!=null){
-      $this->markTestIncomplete(
-                "La suppression de l'enreg personne a echoué"
-        );
-}
-    }  catch (Exception $e){
-        //verification exception
-        $exception="RECORD PERSONNE not present in DATABASE";
-        $this->assertEquals($exception,$e->getMessage());
-
-    }
-        
+        $dt = new DateTime('1950-01-12');
+        $p = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
+        $p->setPwd("monpwd");
+        //insertion en bdd
+        $this->personne->ajout($p);
+        $id = $this->personne->lastInsertId();
+        $p->setId($id);
+        $pers = $this->personne->selectionId($id);
+        $this->personne->suppression($p);
+        $res = false;
+        try {
+            $pers = $this->personne->selectionId($id);
+        } catch (Exception $e)
+        {
+            $res = true;
+        }
+        $this->assertTrue($res);
     }
 
     /**
@@ -112,22 +105,23 @@ if($pers2!=null){
 * @backupStaticAttributes disabled
 */ 
     public function testSelectionNom() {
-     $this->personne = new PersonneDB($this->pdodb);
-     $dt = new DateTime('1850-11-20');
- $p=new Personne("Valjean", "jean",$dt,"0712233445","jvaljean@free.fr","jvaljean","cosette");
- $p->setPwd("cosette");
-$this->personne->ajout($p);
-
-$pers=$this->personne->selectionNom($p->getNom()); // bullshit
-$this->assertEquals($p->getNom(),$pers->getNom());
-$this->assertEquals($p->getPrenom(),$pers->getPrenom());
-$this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
-$this->assertEquals($p->getTelephone(),$pers->getTelephone());
-$this->assertEquals($p->getEmail(),$pers->getEmail());
-$this->assertEquals($p->getLogin(),$pers->getLogin());
-$this->assertEquals($p->getPwd(),$pers->getPwd());
-
-
+        $dt = new DateTime('1950-01-12');
+        $p = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
+        $p->setPwd("monpwd");
+        //insertion en bdd
+        $this->personne->ajout($p);
+        $id = $this->personne->lastInsertId();
+        $p->setId($id);
+        $pers = $this->personne->selectionNom($p->getNom());
+        $this->personne->suppression($p);
+        $this->assertEquals($p->getId(),$pers->getId());
+        $this->assertEquals($p->getNom(),$pers->getNom());
+        $this->assertEquals($p->getPrenom(),$pers->getPrenom(),"Valeur de retour de getPrenom() incorrecte");
+        $this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
+        $this->assertEquals($p->getTelephone(),$pers->getTelephone());
+        $this->assertEquals($p->getEmail(),$pers->getEmail());
+        $this->assertEquals($p->getlogin(),$pers->getLogin());
+        $this->assertEquals($p->getPwd(),$pers->getPwd());
     }
 
     /**
@@ -139,17 +133,23 @@ $this->assertEquals($p->getPwd(),$pers->getPwd());
 * @backupStaticAttributes disabled
 */ 
     public function testSelectionId() {
-         $this->personne = new PersonneDB($this->pdodb);
-         $p=$this->personne->selectionNom("Valjean");
-         $pers=$this->personne->selectionId($p->getId());
-           $this->assertEquals($p->getId(),$pers->getId());
-         $this->assertEquals($p->getNom(),$pers->getNom());
-$this->assertEquals($p->getPrenom(),$pers->getPrenom(),"Valeur de retour de getPrenom() incorrecte");
-$this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
-$this->assertEquals($p->getTelephone(),$pers->getTelephone());
-$this->assertEquals($p->getEmail(),$pers->getEmail());
-$this->assertEquals($p->getlogin(),$pers->getLogin());
-$this->assertEquals($p->getPwd(),$pers->getPwd());        
+        $dt = new DateTime('1950-01-12');
+        $p = new Personne("Hollande", "Francois",$dt,"0656463524", "fhollande@free.fr", "fhollande", "monpwd");
+        $p->setPwd("monpwd");
+        //insertion en bdd
+        $this->personne->ajout($p);
+        $id = $this->personne->lastInsertId();
+        $p->setId($id);
+        $pers = $this->personne->selectionId($id);
+        $this->personne->suppression($p);
+        $this->assertEquals($p->getId(),$pers->getId());
+        $this->assertEquals($p->getNom(),$pers->getNom());
+        $this->assertEquals($p->getPrenom(),$pers->getPrenom(),"Valeur de retour de getPrenom() incorrecte");
+        $this->assertEquals($p->getDatenaissance()->format('Y-m-d'),$pers->getDatenaissance()->format('Y-m-d'));
+        $this->assertEquals($p->getTelephone(),$pers->getTelephone());
+        $this->assertEquals($p->getEmail(),$pers->getEmail());
+        $this->assertEquals($p->getlogin(),$pers->getLogin());
+        $this->assertEquals($p->getPwd(),$pers->getPwd());
     }
 
     /**

@@ -11,6 +11,7 @@ require_once "metier/Personne.php";
 class PersonneDB
 {
 	private $db; // Instance de PDO
+	public $last_id;
 	
 	public function __construct($db)
 	{
@@ -31,7 +32,8 @@ class PersonneDB
 		$q->bindValue(':email',$p->getEmail());
 		$q->bindValue(':login',$p->getLogin());
 		$q->bindValue(':pwd',$p->getPwd());
-		$q->execute();	
+		$q->execute();
+		$this->last_id=$this->db->lastInsertId();
 		$q->closeCursor();
 		$q = NULL;
 	}
@@ -61,7 +63,7 @@ class PersonneDB
 		$q = $this->db->prepare($query);
 
 		$q->bindValue(':nom',$nom);
-		q->execute();
+		$q->execute();
 		$arrAll = $q->fetch(PDO::FETCH_ASSOC);
 		//si pas de personne , on leve une exception
 		if(empty($arrAll))
@@ -154,7 +156,8 @@ class PersonneDB
 			$q->bindValue(':e', $p->getEmail());
 			$q->bindValue(':l', $p->getLogin());
 			$q->bindValue(':pass', $p->getPwd());
-			$q->execute();	
+			$q->execute();
+			$this->last_id=$this->db->lastInsertId();
 			$q->closeCursor();
 			$q = NULL;
 		}
@@ -184,5 +187,10 @@ class PersonneDB
 		
 		//retour du resultat
 		return $arrAll;
+	}
+
+	public function lastInsertId()
+	{
+		return ($this->last_id);
 	}
 }
